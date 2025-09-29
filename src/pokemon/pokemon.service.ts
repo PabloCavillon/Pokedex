@@ -9,6 +9,7 @@ import { UpdatePokemonDto } from './dto/update-pokemon.dto';
 import { isValidObjectId, Model } from 'mongoose';
 import { Pokemon } from './entities/pokemon.entity';
 import { InjectModel } from '@nestjs/mongoose';
+import { PaginationDto } from 'src/common/dto/pagintation.dto';
 
 @Injectable()
 export class PokemonService {
@@ -27,8 +28,17 @@ export class PokemonService {
         }
     }
 
-    async findAll() {
-        return "Hola!";
+    async findAll(paginationDto: PaginationDto) {
+        const { limit = 10, offset = 5 } = paginationDto;
+
+        return this.pokemonModel
+            .find()
+            .limit(limit)
+            .skip(offset)
+            .sort({
+                no: 1,
+            })
+            .select('-__v');
     }
 
     async findOne(term: string) {
@@ -70,22 +80,22 @@ export class PokemonService {
     }
 
     async remove(id: string) {
-		const { deletedCount } = await this.pokemonModel.deleteOne({_id: id});
-        if(deletedCount === 0) 
+        const { deletedCount } = await this.pokemonModel.deleteOne({ _id: id });
+        if (deletedCount === 0)
             throw new BadRequestException(`Pokemon with id '${id}' not found`);
         return;
     }
 
-	private handleExceptions(error: any) {
-		if (error.code === 11000) {
-			throw new BadRequestException(
-				`Pokemon exists in db ${JSON.stringify(error.keyValue)}`,
-			);
-		} else {
-			console.log(error);
-			throw new InternalServerErrorException(
-				`Can´t create Pokemon - Check server logs`,
-			);
-		}
-	}
+    private handleExceptions(error: any) {
+        if (error.code === 11000) {
+            throw new BadRequestException(
+                `Pokemon exists in db ${JSON.stringify(error.keyValue)}`,
+            );
+        } else {
+            console.log(error);
+            throw new InternalServerErrorException(
+                `Can´t create Pokemon - Check server logs`,
+            );
+        }
+    }
 }
